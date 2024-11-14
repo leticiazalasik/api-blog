@@ -1,0 +1,183 @@
+<script>
+    // Define a URL da API para os posts. É o ponto de acesso para as operações CRUD (Create, Read, Update, Delete).
+    const API_URL = 'https://jsonplaceholder.typicode.com/posts';
+    
+    // Obtém os elementos HTML necessários para interagir com o DOM (Document Object Model).
+    const postForm = document.getElementById('postForm'); // O formulário onde o usuário pode criar ou editar um post.
+    const postsContainer = document.getElementById('posts'); // O container onde os posts serão exibidos na interface.
+    const postIdInput = document.getElementById('postId'); // Campo de entrada onde o ID do post será inserido para edição.
+    const titleInput = document.getElementById('title'); // Campo de entrada para o título do post.
+    const bodyInput = document.getElementById('body'); // Campo de entrada para o corpo do post.
+
+    // CREATE - Função assíncrona para criar um novo post na API.
+    async function createPost(postData) {
+        try {
+            // Envia uma requisição POST para a API com os dados do novo post.
+            const response = await fetch(API_URL, {
+                method: 'POST', // O método HTTP 'POST' é usado para criar um novo recurso.
+                headers: {
+                    'Content-Type': 'application/json' // Define que os dados enviados são no formato JSON.
+                },
+                body: JSON.stringify({
+                    ...postData, // Espalha os dados do post fornecidos (título, corpo).
+                    userId: 1 // A API JSONPlaceholder requer um userId, que aqui é fixado como 1.
+                })
+            });
+
+            // Se a resposta não for bem-sucedida, lança um erro.
+            if (!response.ok) throw new Error('Erro ao criar post');
+            
+            // Converte a resposta da API para formato JSON.
+            const data = await response.json();
+            alert('Post criado com sucesso! (Simulado)'); // Exibe um alerta para o usuário que o post foi criado.
+            return data; // Retorna os dados do post criado.
+        } catch (error) {
+            console.error('Erro:', error); // Exibe o erro no console para depuração.
+            alert('Erro ao criar post'); // Exibe um alerta de erro para o usuário.
+        }
+    }
+
+    // READ - Função assíncrona para buscar posts da API.
+    async function getPosts() {
+        try {
+            // Envia uma requisição GET para a API, limitando o número de posts a 10.
+            const response = await fetch(`${API_URL}?_limit=10`);
+            if (!response.ok) throw new Error('Erro ao buscar posts'); // Lança um erro se a resposta não for bem-sucedida.
+            
+            // Converte a resposta para JSON, que será um array de posts.
+            const data = await response.json();
+            return data; // Retorna os posts.
+        } catch (error) {
+            console.error('Erro:', error); // Exibe erro no console se houver um problema ao buscar os posts.
+            alert('Erro ao buscar posts'); // Alerta o usuário em caso de erro na requisição.
+            return []; // Retorna um array vazio se a requisição falhar.
+        }
+    }
+
+    // UPDATE - Função assíncrona para atualizar um post existente com base no seu ID.
+    async function updatePost(id, postData) {
+        try {
+            // Envia uma requisição PUT para atualizar o post com o ID fornecido.
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'PUT', // O método PUT é usado para atualizar um recurso existente.
+                headers: {
+                    'Content-Type': 'application/json' // Define que os dados enviados são no formato JSON.
+                },
+                body: JSON.stringify({
+                    ...postData, // Espalha os dados atualizados do post (título, corpo).
+                    userId: 1 // A API JSONPlaceholder também requer o userId (fixado como 1).
+                })
+            });
+
+            // Se a resposta não for bem-sucedida, lança um erro.
+            if (!response.ok) throw new Error('Erro ao atualizar post');
+            
+            // Converte a resposta da API para formato JSON.
+            const data = await response.json();
+            alert('Post atualizado com sucesso! (Simulado)'); // Exibe alerta de sucesso para o usuário.
+            return data; // Retorna os dados do post atualizado.
+        } catch (error) {
+            console.error('Erro:', error); // Exibe erro no console se ocorrer algum erro na requisição.
+            alert('Erro ao atualizar post'); // Alerta o usuário em caso de erro na requisição.
+        }
+    }
+
+    // DELETE - Função assíncrona para deletar um post existente com base no seu ID.
+    async function deletePost(id) {
+        try {
+            // Envia uma requisição DELETE para excluir o post com o ID especificado.
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE' // O método DELETE é usado para excluir o recurso.
+            });
+
+            // Se a resposta não for bem-sucedida, lança um erro.
+            if (!response.ok) throw new Error('Erro ao deletar post');
+            
+            alert('Post deletado com sucesso! (Simulado)'); // Exibe alerta de sucesso ao usuário.
+            return true; // Retorna true indicando que a exclusão foi bem-sucedida.
+        } catch (error) {
+            console.error('Erro:', error); // Exibe erro no console em caso de falha na exclusão.
+            alert('Erro ao deletar post'); // Alerta o usuário em caso de erro na exclusão.
+            return false; // Retorna false indicando que a exclusão falhou.
+        }
+    }
+
+    // Função para renderizar a lista de posts na página.
+    async function renderPosts() {
+        // Obtém os posts da API chamando a função getPosts.
+        const posts = await getPosts();
+        postsContainer.innerHTML = ''; // Limpa o container de posts antes de adicionar novos posts.
+
+        // Para cada post recebido, cria um novo elemento de card para exibir as informações.
+        posts.forEach(post => {
+            const div = document.createElement('div'); // Cria um novo div para o post.
+            div.className = 'col-md-6 mb-4'; // Define a classe CSS para o layout do post (estilização).
+            div.innerHTML = `
+                <!-- Estrutura do card do post -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">${post.title}</h5> <!-- Exibe o título do post -->
+                        <p class="card-text">${post.body}</p> <!-- Exibe o conteúdo do post -->
+                        <button onclick="editPost(${post.id})" class="btn btn-warning">Editar</button> <!-- Botão para editar -->
+                        <button onclick="confirmDelete(${post.id})" class="btn btn-danger">Excluir</button> <!-- Botão para excluir -->
+                    </div>
+                </div>
+            `;
+            // Adiciona o novo div (card) ao container de posts.
+            postsContainer.appendChild(div);
+        });
+    }
+
+    // Função para carregar as informações de um post para edição.
+    async function editPost(id) {
+        // Faz uma requisição para obter os dados do post com o ID fornecido.
+        const response = await fetch(`${API_URL}/${id}`);
+        const post = await response.json(); // Converte a resposta da API para JSON.
+
+        // Preenche os campos do formulário com os dados do post para edição.
+        postIdInput.value = post.id;
+        titleInput.value = post.title;
+        bodyInput.value = post.body;
+    }
+
+    // Função para confirmar a exclusão de um post.
+    function confirmDelete(id) {
+        // Exibe uma caixa de confirmação para o usuário.
+        if (confirm('Tem certeza que deseja excluir este post?')) {
+            // Se o usuário confirmar, chama a função deletePost para excluir o post.
+            deletePost(id).then(success => {
+                if (success) renderPosts(); // Se a exclusão for bem-sucedida, renderiza os posts novamente.
+            });
+        }
+    }
+
+    // Event Listener para o formulário, que irá lidar com a criação ou edição do post.
+    postForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Previne o comportamento padrão de envio do formulário (recarregar a página).
+
+        // Coleta os dados inseridos pelo usuário nos campos de título e corpo do post.
+        const postData = {
+            title: titleInput.value,
+            body: bodyInput.value
+        };
+
+        // Verifica se o campo postIdInput contém um valor, indicando que é uma edição de post.
+        if (postIdInput.value) {
+            // Se for edição, chama a função updatePost com o ID do post e os dados atualizados.
+            await updatePost(postIdInput.value, postData);
+        } else {
+            // Se for criação, chama a função createPost para criar um novo post.
+            await createPost(postData);
+        }
+
+        // Após o envio, reseta o formulário.
+        postForm.reset();
+        postIdInput.value = ''; // Limpa o campo do ID do post (não será necessário para criação).
+        
+        // Atualiza a lista de posts exibidos na interface.
+        renderPosts();
+    });
+
+    // Carrega a lista de posts quando a página é carregada.
+    renderPosts();
+</script>
